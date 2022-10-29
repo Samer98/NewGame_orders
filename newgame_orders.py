@@ -25,15 +25,35 @@ with requests.Session() as session:
             orders_link.append(str(link['href']))
 
     # print(orders_link)
-    first_order = orders_link[1]
+    first_order = orders_link[2]
     print(first_order)
     first_order_result = session.post(first_order,headers=headers)
     first_order_result_data = BeautifulSoup(first_order_result.text, "html.parser")
     # print(first_order_result_data)
+
+
+
+    for details in first_order_result_data.find_all(class_="fa fa-phone fa-fw"):
+        telephone = (details.parent.parent.parent.contents[3].getText())
+    page_contents=[]
     for details in first_order_result_data.find_all("td",class_='text-left'):
-        print(details.get_text(separator=" "))
-#
-#     try:
+        page_contents.append(details.contents)
+    print(page_contents[2])
+    name = page_contents[2][0]
+    address = page_contents[2][2]
+    district = page_contents[2][4]
+
+    total_price=[]
+    for details in first_order_result_data.find_all("td",class_='text-right'):
+        total_price.extend(details.contents)
+
+    total_price= total_price[-1]
+    # print(total_price)
+
+client_details=[]
+client_details.extend([name,telephone,address,district,total_price[:-3]])
+print(client_details)
+    # try:
 #         video = game.find('iframe')
 #         video_link= video['src']
 #         video_link= video_link.replace('embed/',"watch?v=")
