@@ -5,15 +5,7 @@ import json
 import os
 from _datetime import datetime
 import time
-
-
-
 import PySimpleGUI as sg
-
-
-
-
-
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10.12; rv:55.0) Gecko/20100101 Firefox/55.0',
@@ -23,7 +15,59 @@ payload = {
     'username':'Super_User',
     'password':'987654321'
 }
+def order_number_no_gui(order_number):
+    # try:
+    #     order_num = int(input('which order do you want to get ? '))
+    #
+    # except:
+    #     order_num = 0
+    with requests.Session() as session:
+        result = session.post(login_url,data=payload, headers=headers)
+        print(result.headers)
+        orders = BeautifulSoup(result.text, "html.parser")
+        # print(orders.prettify())
+        orders_link = []
+        for link in orders.find_all(href=True):
+            if "order_id" in link['href']:
+                orders_link.append(str(link['href']))
 
+        # print(orders_link)
+        first_order = orders_link[order_number-1]
+        print(first_order)
+        first_order_result = session.post(first_order,headers=headers)
+        first_order_result_data = BeautifulSoup(first_order_result.text, "html.parser")
+        # print(first_order_result_data)
+
+
+
+        for details in first_order_result_data.find_all(class_="fa fa-phone fa-fw"):
+            telephone = (details.parent.parent.parent.contents[3].getText())
+        page_contents=[]
+        for details in first_order_result_data.find_all("td",class_='text-left'):
+            page_contents.append(details.contents)
+        print(page_contents[2])
+        name = page_contents[2][0]
+        address = page_contents[2][2]
+        district = page_contents[2][4]
+        prodcuts =[]
+        for details in first_order_result_data.find_all("td",class_='text-left'):
+            try:
+                prodcuts.append(details.contents[0].getText())
+            except:
+                continue
+        print(prodcuts)
+
+
+        total_price=[]
+        for details in first_order_result_data.find_all("td",class_='text-right'):
+            total_price.extend(details.contents)
+
+        total_price= total_price[-1]
+        # print(total_price)
+
+    client_details=[]
+    client_details.extend([name,telephone,address,district,total_price[:-3],prodcuts])
+    return client_details
 def order_number(order_number):
     # try:
     #     order_num = int(input('which order do you want to get ? '))
@@ -58,6 +102,14 @@ def order_number(order_number):
         name = page_contents[2][0]
         address = page_contents[2][2]
         district = page_contents[2][4]
+        prodcuts =[]
+        for details in first_order_result_data.find_all("td",class_='text-left'):
+            try:
+                prodcuts.append(details.contents[0].getText())
+            except:
+                continue
+        print(prodcuts)
+
 
         total_price=[]
         for details in first_order_result_data.find_all("td",class_='text-right'):
@@ -67,8 +119,7 @@ def order_number(order_number):
         # print(total_price)
 
     client_details=[]
-    client_details.extend([name,telephone,address,district,total_price[:-3]])
-    print(client_details)
+    client_details.extend([name,telephone,address,district,total_price[:-3],prodcuts])
     sg.popup_scrolled(client_details,title="order details")
 ###############################
 def order_number(order_range):
@@ -99,6 +150,15 @@ def order_number(order_range):
             address = page_contents[2][2]
             district = page_contents[2][4]
 
+            prodcuts =[]
+            for details in order_result_data.find_all("td",class_='text-left'):
+                try:
+                    prodcuts.append(details.contents[0].getText())
+                except:
+                    continue
+            print(prodcuts)
+
+
             total_price=[]
             for details in order_result_data.find_all("td",class_='text-right'):
                 total_price.extend(details.contents)
@@ -107,9 +167,9 @@ def order_number(order_range):
             # print(total_price)
 
             if order_range ==1:
-                client_details.extend([name,telephone,address,district,total_price[:-3]])
+                client_details.extend([name,telephone,address,district,total_price[:-3],prodcuts])
             else:
-                client_details.append([name,telephone,address,district,total_price[:-3]])
+                client_details.append([name,telephone,address,district,total_price[:-3],prodcuts])
     print(client_details)
     sg.popup_scrolled(client_details,title="order details")
 
